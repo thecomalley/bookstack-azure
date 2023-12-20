@@ -1,3 +1,5 @@
+[![infracost](https://img.shields.io/endpoint?url=https://dashboard.api.infracost.io/shields/json/a438c687-8cd1-43aa-8b04-50791d9c4d0f/repos/3a5b5cc0-945a-467b-83f0-5df939679de4/branch/600fd0db-2c15-4c74-a40c-4fd554f901c7)](https://dashboard.infracost.io/org/omalleychriso/repos/3a5b5cc0-945a-467b-83f0-5df939679de4?tab=settings)
+
 ## Requirements
 
 | Name | Version |
