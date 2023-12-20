@@ -17,12 +17,10 @@ locals {
   env_bookstackapp = {
     "PUID"        = "1000"
     "PGID"        = "1000"
-    "APP_URL"     = "https://bookstack.example.com"
     "DB_HOST"     = "bookstackdb"
     "DB_PORT"     = "3306"
-    "DB_DATABASE" = "bookstack"
+    "DB_DATABASE" = "bookstackdb"
     "DB_USER"     = "bookstack"
-    "DB_PASS"     = "password"
   }
 }
 
@@ -32,17 +30,23 @@ resource "azurerm_container_app" "bookstackapp" {
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Multiple"
 
+  secret {
+    name  = "db-pass"
+    value = random_password.mysql_password.result
+  }
+
   ingress {
     target_port      = 6875
     external_enabled = true
     traffic_weight {
+      revision_suffix = "terraform"
       percentage = 100
     }
   }
 
   template {
     volume {
-      name = "bookstackapp"
+      name         = "bookstackapp"
       storage_name = "bookstackapp"
       storage_type = "AzureFile"
     }
@@ -61,9 +65,14 @@ resource "azurerm_container_app" "bookstackapp" {
         }
       }
 
+      env {
+        name  = "DB_PASS"
+        secret_name = "db-pass"
+      }
+
       volume_mounts {
-        name      = "bookstackapp"
-        path      = "/config"
+        name = "bookstackapp"
+        path = "/config"
       }
 
     }

@@ -1,71 +1,90 @@
-# resource "azurerm_storage_share" "bookstackdb" {
-#   name                 = "bookstackdb"
-#   storage_account_name = azurerm_storage_account.main.name
-#   quota                = 5
-# }
+resource "azurerm_storage_share" "bookstackdb" {
+  name                 = "bookstackdb"
+  storage_account_name = azurerm_storage_account.main.name
+  quota                = 5
+}
 
-# resource "azurerm_container_app_environment_storage" "bookstackdb" {
-#   name                         = "bookstackdb"
-#   container_app_environment_id = azurerm_container_app_environment.main.id
-#   account_name                 = azurerm_storage_account.main.name
-#   share_name                   = azurerm_storage_share.bookstackdb.name
-#   access_key                   = azurerm_storage_account.main.primary_access_key
-#   access_mode                  = "ReadWrite"
-# }
+resource "azurerm_container_app_environment_storage" "bookstackdb" {
+  name                         = "bookstackdb"
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  account_name                 = azurerm_storage_account.main.name
+  share_name                   = azurerm_storage_share.bookstackdb.name
+  access_key                   = azurerm_storage_account.main.primary_access_key
+  access_mode                  = "ReadWrite"
+}
 
-# locals {
-#   env_bookstackdb = {
-#     "PUID"                = "1000"
-#     "PGID"                = "1000"
-#     "MYSQL_ROOT_PASSWORD" = "https://bookstack.example.com"
-#     "TZ"                  = "Australia/Sydney"
-#     "MYSQL_DATABASE"      = "bookstackapp"
-#     "MYSQL_USER"          = "bookstack"
-#     "MYSQL_PASSWORD"      = "bookstack"
-#   }
-# }
+locals {
+  env_bookstackdb = {
+    "PUID"                = "1000"
+    "PGID"                = "1000"
+    "TZ"                  = "Australia/Sydney"
+    "MYSQL_DATABASE"      = "bookstackdb"
+    "MYSQL_USER"          = "bookstack"
+  }
+}
 
-# resource "azurerm_container_app" "bookstackdb" {
-#   name                         = "bookstackdb"
-#   container_app_environment_id = azurerm_container_app_environment.main.id
-#   resource_group_name          = azurerm_resource_group.main.name
-#   revision_mode                = "Multiple"
+resource "azurerm_container_app" "bookstackdb" {
+  name                         = "bookstackdb"
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  resource_group_name          = azurerm_resource_group.main.name
+  revision_mode                = "Single"
 
-#   ingress {
-#     target_port      = 6875
-#     external_enabled = true
-#     traffic_weight {
-#       percentage = 100
-#     }
-#   }
+  secret {
+    name  = "mysql-root-password"
+    value = random_password.mysql_root_password.result
+  }
 
-#   template {
-    
-#     volume {
-#       name = "bookstackdb"
-#       storage_name = "bookstackdb"
-#       storage_type = "AzureFile"
-#     }
+  secret {
+    name  = "mysql-password"
+    value = random_password.mysql_password.result
+  }
 
-#     container {
-#       name   = "bookstackdb"
-#       image  = "lscr.io/linuxserver/mariadb:latest"
-#       cpu    = 1
-#       memory = "2Gi"
+  ingress {
+    transport    = "tcp"
+    exposed_port = 3306
+    target_port  = 3306
+    traffic_weight {
+      percentage = 100
+    }
+  }
 
-#       dynamic "env" {
-#         for_each = local.env_bookstackdb
-#         content {
-#           name  = env.key
-#           value = env.value
-#         }
-#       }
+  template {
 
-#       volume_mounts {
-#         name      = "bookstackdb"
-#         path      = "/config"
-#       }
+    volume {
+      name         = "bookstackdb"
+      storage_name = "bookstackdb"
+      storage_type = "AzureFile"
+    }
 
-#     }
-#   }
-# }
+    container {
+      name   = "bookstackdb"
+      image  = "lscr.io/linuxserver/mariadb:latest"
+      cpu    = 1
+      memory = "2Gi"
+
+      dynamic "env" {
+        for_each = local.env_bookstackdb
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+
+      env {
+        name = "MYSQL_ROOT_PASSWORD"
+        secret_name = "mysql-root-password"
+      }
+
+      env {
+        name = "MYSQL_PASSWORD"
+        secret_name = "mysql-password"
+      }
+
+      volume_mounts {
+        name = "bookstackdb"
+        path = "/config"
+      }
+
+    }
+  }
+}

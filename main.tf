@@ -25,3 +25,15 @@ resource "azurerm_storage_account" "main" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
+
+resource "random_password" "mysql_root_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
+resource "random_password" "mysql_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
