@@ -27,7 +27,7 @@ resource "azurerm_container_app" "bookstackdb" {
   name                         = "bookstackdb"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = azurerm_resource_group.main.name
-  revision_mode                = "Single"
+  revision_mode                = "Multiple"
 
   secret {
     name  = "mysql-root-password"
@@ -44,6 +44,7 @@ resource "azurerm_container_app" "bookstackdb" {
     exposed_port = 3306
     target_port  = 3306
     traffic_weight {
+      latest_revision = true
       percentage = 100
     }
   }

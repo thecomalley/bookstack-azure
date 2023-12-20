@@ -39,7 +39,7 @@ resource "azurerm_container_app" "bookstackapp" {
     target_port      = 6875
     external_enabled = true
     traffic_weight {
-      revision_suffix = "terraform"
+      latest_revision = true
       percentage = 100
     }
   }
