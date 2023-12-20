@@ -1,28 +1,22 @@
 ---
-on: [push]
-
+name: Checkov
+on:
+  push:
+    branches:
+      - main
 jobs:
-  terrascan_job:
+  build:
+
     runs-on: ubuntu-latest
-    name: terrascan-action
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Run Terrascan
-      id: terrascan
-      uses: tenable/terrascan-action@main
-      with:
-        iac_type: 'terraform'
-        iac_version: 'v14'
-        policy_type: 'aws'
-        only_warn: true
-        sarif_upload: true
-        #non_recursive:
-        #iac_dir:
-        #policy_path:
-        #skip_rules:
-        #config_path:
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v1
-      with:
-        sarif_file: terrascan.sarif
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: terraform 
