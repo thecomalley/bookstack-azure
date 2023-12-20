@@ -17,10 +17,11 @@ locals {
   env_bookstackapp = {
     "PUID"        = "1000"
     "PGID"        = "1000"
-    "DB_HOST"     = "bookstackdb"
+    "DB_HOST"     = azurerm_mysql_flexible_server.main.fully_qualified_domain_name
     "DB_PORT"     = "3306"
     "DB_DATABASE" = "bookstackdb"
     "DB_USER"     = "bookstack"
+    "APP_URL"     = "https://bookstackapp.thankfulrock-5e23961a.australiaeast.azurecontainerapps.io" #TODO: get this dynamically?
   }
 }
 
@@ -45,6 +46,8 @@ resource "azurerm_container_app" "bookstackapp" {
   }
 
   template {
+    max_replicas = 1
+    min_replicas = 1
     volume {
       name         = "bookstackapp"
       storage_name = "bookstackapp"
@@ -77,4 +80,5 @@ resource "azurerm_container_app" "bookstackapp" {
 
     }
   }
+  depends_on = [ azurerm_container_app_environment_storage.bookstackapp ]
 }

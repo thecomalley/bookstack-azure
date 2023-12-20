@@ -18,8 +18,13 @@ resource "azurerm_container_app_environment" "main" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 }
 
+resource "random_integer" "storage_account" {
+  min = 1
+  max = 999
+}
+
 resource "azurerm_storage_account" "main" {
-  name                     = "bookstackst"
+  name                     = "bookstackst${random_integer.storage_account.result}"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
